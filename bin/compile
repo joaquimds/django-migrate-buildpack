@@ -8,7 +8,7 @@ export ENV_DIR="$3"
 
 export_env_dir() {
   env_dir=$1
-  acceptlist_regex=${2:-'^(SECRET_KEY)$'}
+  acceptlist_regex=${2:-'^(DATABASE_URL|DISABLE_DJANGO_AUTOMIGRATE|SECRET_KEY)$'}
   denylist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
   if [ -d "$env_dir" ]; then
     for e in $(ls $env_dir); do
@@ -22,4 +22,11 @@ export_env_dir() {
 export_env_dir $ENV_DIR
 
 cd $BUILD_DIR
-python manage.py migrate
+
+export SKIP_MIGRATE=${DISABLE_DJANGO_AUTOMIGRATE:-0}
+if [ $SKIP_MIGRATE == 1 ]; then
+  echo "Not migrating as DISABLE_DJANGO_AUTOMIGRATE is set to 1."
+else
+  echo "Running database migrations..."
+  python manage.py migrate
+fi
